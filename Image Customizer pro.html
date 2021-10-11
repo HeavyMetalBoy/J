@@ -1,0 +1,428 @@
+<aside>
+	<form action="">
+		<label for="img_upload">Image</label>
+		<div class="upload-btn">
+			<input id="img_upload" name="img_upload" type="file" accept="image/*">
+			<button class="btn-one-third" type="button" for="img_upload" tabindex="-1">Upload</button>
+			<input class="btn-two-thirds" id="img_name" name="img_name" type="text" placeholder="No file selected" disabled>
+		</div>
+		<div class="colors">
+			<div class="color">
+				<label for="color1">Color 1</label>
+				<input id="color1" type="color" name="color1" value="#ffffff">
+			</div>
+			<div class="color">
+				<label for="color2">Color 2</label>
+				<input id="color2" type="color" name="color2" value="#000000">
+			</div>
+		</div>
+		<div class="btn-group">
+			<button class="btn-half" id="swap-colors" type="button">Swap Colors</button>
+			<a href="#" class="btn-link btn-half dl-btn" id="download" download="result.png">&#x44;&#x6f;&#x77;&#x6e;&#x6c;&#x6f;&#x61;&#x64;</a>
+		</div>
+	</form>
+</aside>
+<main>
+	<canvas></canvas>
+</main>
+<style>
+* {
+	border: 0;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+:root {
+	font-size: calc(16px + (24 - 16) * (100vw - 320px) / (2560 - 320));
+	--bg: #737a8c;
+	--buttonBg: #2762f3;
+	--buttonHoverBg: #0c48db;
+	--formBg: #fff;
+	--inputBorder: #abafba;
+	--inputBg: #fff;
+	--inputDisableBg: #e3e4e8;
+	--pColor: #17181c;
+}
+body, button, input {
+	color: var(--pColor);
+	font: 1em/1.5 "Hind", system-ui, -apple-system, sans-serif;
+}
+body, .upload-btn {
+	overflow: hidden;
+}
+body {
+	background: var(--bg);
+	display: flex;
+	flex-direction: column-reverse;
+	height: 100vh;
+}
+aside, button, canvas, input, main, .upload-btn input[type=file] {
+	width: 100%;
+}
+aside {
+	background: var(--formBg);
+	box-shadow: 0 0 0.25em hsla(223,10%,10%,0.5);
+	overflow: auto;
+}
+button, input {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+}
+button, input[type=color], input[type=file], input[type=file]::-webkit-file-upload-button {
+	cursor: pointer;
+}
+button:hover, button:focus, .btn-link:hover, .btn-link:focus, input[type=file]:hover + button, input[type=file]:focus + button {
+	background: var(--buttonHoverBg);
+}
+button, .btn-link, canvas, input, label {
+	display: block;
+}
+button, .btn-link {
+	background: var(--buttonBg);
+	border-radius: 0.375em;
+	color: #fff;
+	margin-bottom: 1.5em;
+	padding: 0.75em 1em;
+	transition: background 0.1s linear;
+}
+button:focus, .btn-link:focus {
+	outline: 0;
+}
+canvas {
+	image-rendering: pixelated; /* as of Feb 2021, not supported in Firefox */
+	max-height: calc(100vh - 16.625em);
+	object-fit: contain;
+}
+form {
+	padding: 1.5em 1.5em 0 1.5em;
+}
+input[type=text], input[type=file] + button, .upload-btn {
+	margin-bottom: 0.75em;
+}
+input {
+	background: var(--inputBg);
+	border-radius: 0.25em;
+	box-shadow: 0 0 0 1px var(--inputBorder) inset;
+	padding: 0.75em;
+}
+input:disabled {
+	background: var(--inputDisableBg);
+	cursor: not-allowed;
+	text-overflow: ellipsis;
+}
+input[type=color] {
+	height: 3em;
+	padding: 0.375em;
+}
+label {
+	font-weight: bold;
+}
+main {
+	margin: auto;
+}
+.btn-group, .colors, .color, .upload-btn {
+	display: flex;
+	justify-content: space-between;
+}
+.btn-half, .color, .upload-btn input[type=file] {
+	width: calc(50% - 0.375em);
+}
+.btn-one-third {
+	width: calc(33% - 0.375em);
+}
+.btn-two-thirds {
+	width: calc(67% - 0.375em);
+}
+.btn-link {
+	text-align: center;
+	text-decoration: none;
+}
+.colors {
+	margin-bottom: 1.5em;
+}
+.color {
+	align-items: center;
+}
+.color label {
+	width: 4em;
+}
+.color input {
+	width: calc(100% - 4em);
+}
+.dl-btn {
+	background: #067a1f;
+}
+.dl-btn:hover, .dl-btn:focus {
+	background: #044913;
+}
+.upload-btn {
+	position: relative;
+}
+.upload-btn input[type=file] {
+	position: absolute;
+	opacity: 0;
+	top: 0;
+	left: 0;
+	height: 3em;
+}
+/* Tablet, desktop */
+@media screen and (min-width: 768px) {
+	body {
+		flex-direction: row;
+		align-items: center;
+	}
+	aside {
+		width: 20em;
+		height: 100%;
+	}
+	canvas {
+		max-height: 100vh;
+	}
+	main {
+		width: calc(100% - 20em);
+	}
+}
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--formBg: #17181c;
+		--inputBg: #2e3138;
+		--inputDisableBg: #2e3138;
+		--inputBorder: #5c6270;
+		--pColor: #e3e4e8;
+	}
+}
+</style>
+<script>
+window.addEventListener("DOMContentLoaded",app);
+function app() {
+	var form = document.querySelector("form"),
+		imgUpload = document.getElementById("img_upload"),
+		imgName = document.getElementById("img_name"),
+		color1 = document.getElementById("color1"),
+		color2 = document.getElementById("color2"),
+		swapColorsBtn = document.getElementById("swap-colors"),
+		download = document.getElementById("download"),
+		canvas = document.querySelector("canvas"),
+		c = canvas.getContext("2d"),
+		img = null,
+		adjustCanvas = () => {
+			// restrict image size
+			let imgWidth = canvas.width,
+				imgHeight = canvas.height,
+				sideLimit = 1024;
+
+			if (img) {
+				imgWidth = img.width;
+				imgHeight = img.height;
+			}
+			// keep it proportional
+			if (imgWidth >= imgHeight) {
+				if (imgWidth >= sideLimit) {
+					imgWidth = sideLimit;
+					imgHeight = imgWidth * (img.height / img.width);
+				}
+			} else {
+				if (imgHeight >= sideLimit) {
+					imgHeight = sideLimit;
+					imgWidth = imgHeight * (img.width / img.height);
+				}
+			}
+			// update canvas
+			c.clearRect(0,0,canvas.width,canvas.height);
+			canvas.width = imgWidth;
+			canvas.height = imgHeight;
+
+			if (img)
+				c.drawImage(img,0,0,imgWidth,imgHeight);
+		},
+		imgUploadValid = () => {
+			let files = imgUpload.files,
+				fileIsThere = files.length > 0,
+				isImage = files[0].type.match("image.*"),
+				valid = fileIsThere && isImage;
+
+			return valid;
+		},
+		handleImgUpload = e => {
+			return new Promise((resolve,reject) => {
+				let target = !e ? imgUpload : e.target;
+				if (target.files.length) {
+					let reader = new FileReader();
+					reader.onload = e2 => {
+						img = new Image();
+						img.src = e2.target.result;
+						img.onload = () => {
+							resolve();
+						};
+						img.onerror = () => {
+							img = null;
+							reject("The image has been nullified due to file corruption or a wrong kind of file.");
+						};
+						imgName.placeholder = target.files[0].name;
+					};
+					reader.readAsDataURL(target.files[0]);
+				}
+			});
+		},
+		hexToRGB = h => {
+			let r = 0,
+				g = 0,
+				b = 0;
+			// 3 digits
+			if (h.length == 4) {
+				r = "0x" + h[1] + h[1];
+				g = "0x" + h[2] + h[2];
+				b = "0x" + h[3] + h[3];
+			// 6 digits
+			} else if (h.length == 7) {
+				r = "0x" + h[1] + h[2];
+				g = "0x" + h[3] + h[4];
+				b = "0x" + h[5] + h[6];
+			}
+
+			return {r: +r, g: +g, b: +b};
+		},
+		RGBToHSL = (R,G,B) => {
+			let r = R / 255,
+				g = G / 255,
+				b = B / 255,
+				cmin = Math.min(r,g,b),
+				cmax = Math.max(r,g,b),
+				delta = cmax - cmin,
+				hue = 0,
+				sat = 0,
+				light = 0;
+			// get hue
+			if (delta == 0)
+				hue = 0;
+			else if (cmax == r)
+				hue = ((g - b) / delta) % 6;
+			else if (cmax == g)
+				hue = (b - r) / delta + 2;
+			else
+				hue = (r - g) / delta + 4;
+
+			hue = Math.round(hue * 60);
+
+			if (hue < 0)
+				hue += 360;
+			// get lightness and saturation
+			light = (cmax + cmin) / 2;
+			sat = delta == 0 ? 0 : delta / (1 - Math.abs(2 * light - 1));
+
+			sat = Math.round(sat * 100);
+			light = Math.round(light * 100);
+
+			return {h: hue, s: sat, l: light};
+		},
+		HSLToRGB = (H,S,L) => {
+			let s = S / 100,
+				l = L / 100,
+				c = (1 - Math.abs(2 * l - 1)) * s,
+				x = c * (1 - Math.abs((H / 60) % 2 - 1)),
+				m = l - c/2,
+				r = 0,
+				g = 0,
+				b = 0;
+
+			if (0 <= H && H < 60) {
+				r = c; g = x; b = 0;
+
+			} else if (60 <= H && H < 120) {
+				r = x; g = c; b = 0;
+
+			} else if (120 <= H && H < 180) {
+				r = 0; g = c; b = x;
+
+			} else if (180 <= H && H < 240) {
+				r = 0; g = x; b = c;
+
+			} else if (240 <= H && H < 300) {
+				r = x; g = 0; b = c;
+
+			} else if (300 <= H && H < 360) {
+				r = c; g = 0; b = x;
+			}
+
+			r = Math.round((r + m) * 255);
+			g = Math.round((g + m) * 255);
+			b = Math.round((b + m) * 255);
+
+			return {r: r, g: g, b: b};
+		},
+		render = () => {
+			adjustCanvas();
+
+			let imgData = c.getImageData(0,0,canvas.width,canvas.height),
+				data = imgData.data,
+				color1ToRGB = hexToRGB(color1.value),
+				color2ToRGB = hexToRGB(color2.value);
+
+			for (let i = 0; i < data.length; i += 4) {
+				let inHSL = RGBToHSL(data[i],data[i + 1],data[i + 2]),
+					BWLight = Math.round(inHSL.l / 100),
+					newR = 0,
+					newG = 0,
+					newB = 0;
+
+				if (BWLight) {
+					newR = color1ToRGB.r;
+					newG = color1ToRGB.g;
+					newB = color1ToRGB.b;
+
+				} else {
+					newR = color2ToRGB.r;
+					newG = color2ToRGB.g;
+					newB = color2ToRGB.b;
+				}
+
+				data[i] = newR;
+				data[i + 1] = newG;
+				data[i + 2] = newB;
+			}
+			c.putImageData(imgData,0,0);
+		},
+		renderPromise = e => {
+			handleImgUpload(e).then(() => {
+				if (imgUploadValid())
+					render();
+					
+			}).catch(msg => {
+				console.log(msg);
+			});
+		},
+		starterImg = src => {
+			img = new Image();
+			img.src = src;
+			img.setAttribute("crossOrigin","anonymous");
+			img.onload = e => {
+				render();
+			};
+		},
+		swapColors = () => {
+			let a = color1.value;
+				b = color2.value;
+
+			color1.value = b;
+			color2.value = a;
+			render();
+		};
+
+	imgUpload.addEventListener("change",renderPromise);
+	color1.addEventListener("change",render);
+	color2.addEventListener("change",render);
+	swapColorsBtn.addEventListener("click",swapColors);
+	download.addEventListener("click",function(e){
+		let dlData = canvas.toDataURL("image/png");
+		this.href = dlData;
+	});
+
+	// deal with preserved input or start with a sample image
+	if (imgUpload.value != "")
+		renderPromise();
+	else
+		starterImg("https://i.ibb.co/wQ9ymp5/atlantic-city-nj.jpg");
+}
+</script>
